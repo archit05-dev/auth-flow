@@ -17,18 +17,25 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final OtpRepository otpRepository;
     private final OtpService otpService;
+    private final EmailService emailService;
 
 
-    public AuthService(UserRepository userRepository,
-                       OtpRepository otpRepository,
-                       PasswordEncoder passwordEncoder,
-                       OtpService otpService) {
 
+    public AuthService(
+            UserRepository userRepository,
+            OtpRepository otpRepository,
+            PasswordEncoder passwordEncoder,
+            OtpService otpService,
+            EmailService emailService) {
         this.userRepository = userRepository;
         this.otpRepository = otpRepository;
         this.passwordEncoder = passwordEncoder;
         this.otpService = otpService;
+        this.emailService = emailService;
     }
+
+
+
 
     public RegisterResponse register(RegisterRequest request) {
 
@@ -56,8 +63,7 @@ public class AuthService {
 
         otpRepository.save(otpEntity);
 
-        // Temporary testing
-        System.out.println("OTP for " + user.getEmail() + ": " + otp);
+        emailService.sendOtp(user.getEmail(), otp);
 
         return new RegisterResponse("OTP sent successfully");
     }
