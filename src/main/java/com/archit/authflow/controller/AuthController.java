@@ -2,6 +2,7 @@
 package com.archit.authflow.controller;
 
 import com.archit.authflow.dto.request.RegisterRequest;
+import com.archit.authflow.dto.request.ResendOtpRequest;
 import com.archit.authflow.dto.request.VerifyOtpRequest;
 import com.archit.authflow.dto.response.MessageResponse;
 import com.archit.authflow.dto.response.RegisterResponse;
@@ -29,5 +30,12 @@ public class AuthController {
             @Valid @RequestBody VerifyOtpRequest request) {
 
         return authService.verifyOtp(request);
+    }
+
+    @PostMapping("/resend-otp")
+    public MessageResponse resendOtp(
+            @Valid @RequestBody ResendOtpRequest request) {
+
+        return authService.resendOtp(request);
     }
 }

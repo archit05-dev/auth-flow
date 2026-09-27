@@ -2,11 +2,16 @@
 package com.archit.authflow.service;
 
 import com.archit.authflow.dto.request.RegisterRequest;
+import com.archit.authflow.dto.request.ResendOtpRequest;
 import com.archit.authflow.dto.request.VerifyOtpRequest;
 import com.archit.authflow.dto.response.MessageResponse;
 import com.archit.authflow.dto.response.RegisterResponse;
 import com.archit.authflow.entity.Otp;
 import com.archit.authflow.entity.User;
+import com.archit.authflow.exception.AlreadyVerifiedException;
+import com.archit.authflow.exception.InvalidOtpException;
+import com.archit.authflow.exception.TooManyResendAttemptsException;
+import com.archit.authflow.exception.UserAlreadyExistsException;
 import com.archit.authflow.repository.OtpRepository;
 import com.archit.authflow.repository.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -45,7 +50,7 @@ public class AuthService {
     public RegisterResponse register(RegisterRequest request) {
 
         if(userRepository.existsByEmail(request.email())){
-            throw new RuntimeException("Email already exists");
+            throw new UserAlreadyExistsException("Email already exists");
         }
 
         User user = new User();
@@ -78,7 +83,7 @@ public class AuthService {
     public MessageResponse verifyOtp(VerifyOtpRequest request) {
 
         Otp otpEntity = otpRepository
-                .findTopByEmailOrderByExpiryDesc(request.email())
+                .findTopByEmailOrderByIdDesc(request.email())
                 .orElseThrow(() ->
                         new RuntimeException("OTP not found"));
 
@@ -96,12 +101,59 @@ public class AuthService {
         }
 
         if (!passwordEncoder.matches(request.otp(), otpEntity.getOtpHash())) {
-            throw new RuntimeException("Invalid OTP");
+            throw new InvalidOtpException("Invalid OTP");
         }
 
         otpEntity.setUsed(true);
         user.setVerified(true);
 
         return new MessageResponse("Email verified successfully");
+    }
+
+    @Transactional
+    public MessageResponse resendOtp(ResendOtpRequest request) {
+
+        User user = userRepository.findByEmail(request.email())
+                .orElseThrow(() ->
+                        new RuntimeException("User not found"));
+
+        if (user.isVerified()) {
+            throw new AlreadyVerifiedException(
+                    "Email is already verified.");
+        }
+
+        Otp latestOtp = otpRepository
+                .findTopByEmailOrderByIdDesc(request.email())
+                .orElse(null);
+
+        int resendCount = 0;
+
+        if (latestOtp != null) {
+
+            if (latestOtp.getResendCount() >= 3) {
+                throw new TooManyResendAttemptsException(
+                        "Maximum OTP resend attempts reached.");
+            }
+
+            latestOtp.setUsed(true);
+
+            resendCount = latestOtp.getResendCount() + 1;
+        }
+
+        String otp = otpService.generateOtp();
+
+        Otp newOtp = new Otp();
+
+        newOtp.setEmail(user.getEmail());
+        newOtp.setOtpHash(otpService.hashOtp(otp));
+        newOtp.setExpiry(otpService.getExpiryTime());
+        newOtp.setUsed(false);
+        newOtp.setResendCount(resendCount);
+
+        otpRepository.save(newOtp);
+
+        emailService.sendOtp(user.getEmail(), otp);
+
+        return new MessageResponse("OTP resent successfully.");
     }
 }
