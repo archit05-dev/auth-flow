@@ -2,6 +2,8 @@
 package com.archit.authflow.controller;
 
 import com.archit.authflow.dto.request.RegisterRequest;
+import com.archit.authflow.dto.request.VerifyOtpRequest;
+import com.archit.authflow.dto.response.MessageResponse;
 import com.archit.authflow.dto.response.RegisterResponse;
 import com.archit.authflow.service.AuthService;
 import jakarta.validation.Valid;
@@ -20,5 +22,12 @@ public class AuthController {
     @PostMapping("/register")
     public RegisterResponse register(@Valid @RequestBody RegisterRequest request) {
         return authService.register(request);
+    }
+
+    @PostMapping("/verify-otp")
+    public MessageResponse verifyOtp(
+            @Valid @RequestBody VerifyOtpRequest request) {
+
+        return authService.verifyOtp(request);
     }
 }

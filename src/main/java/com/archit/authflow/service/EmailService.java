@@ -19,10 +19,17 @@ public class EmailService {
 
         message.setTo(to);
         message.setSubject("Your AuthFlow OTP");
-        message.setText(
-                "Your OTP is: " + otp +
-                        "\n\nIt expires in 5 minutes."
-        );
+        message.setText("""
+                Hello %s,
+                
+                Your AuthFlow verification code is: %s
+                
+                This OTP will expire in 5 minutes.
+                
+                If you didn't request this, you can safely ignore this email.
+                
+                - AuthFlow
+                """.formatted(to, otp));
 
         mailSender.send(message);
     }
