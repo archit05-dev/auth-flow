@@ -1,17 +1,16 @@
 
 package com.archit.authflow.service;
 
+import com.archit.authflow.dto.request.LoginRequest;
 import com.archit.authflow.dto.request.RegisterRequest;
 import com.archit.authflow.dto.request.ResendOtpRequest;
 import com.archit.authflow.dto.request.VerifyOtpRequest;
+import com.archit.authflow.dto.response.AuthResponse;
 import com.archit.authflow.dto.response.MessageResponse;
 import com.archit.authflow.dto.response.RegisterResponse;
 import com.archit.authflow.entity.Otp;
 import com.archit.authflow.entity.User;
-import com.archit.authflow.exception.AlreadyVerifiedException;
-import com.archit.authflow.exception.InvalidOtpException;
-import com.archit.authflow.exception.TooManyResendAttemptsException;
-import com.archit.authflow.exception.UserAlreadyExistsException;
+import com.archit.authflow.exception.*;
 import com.archit.authflow.repository.OtpRepository;
 import com.archit.authflow.repository.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -28,6 +27,7 @@ public class AuthService {
     private final OtpRepository otpRepository;
     private final OtpService otpService;
     private final EmailService emailService;
+    private final JwtService jwtService;
 
 
 
@@ -36,12 +36,14 @@ public class AuthService {
             OtpRepository otpRepository,
             PasswordEncoder passwordEncoder,
             OtpService otpService,
-            EmailService emailService) {
+            EmailService emailService,
+            JwtService jwtService) {
         this.userRepository = userRepository;
         this.otpRepository = otpRepository;
         this.passwordEncoder = passwordEncoder;
         this.otpService = otpService;
         this.emailService = emailService;
+        this.jwtService = jwtService;
     }
 
 
@@ -155,5 +157,25 @@ public class AuthService {
         emailService.sendOtp(user.getEmail(), otp);
 
         return new MessageResponse("OTP resent successfully.");
+    }
+
+    public AuthResponse login(LoginRequest request) {
+
+        User user = userRepository.findByEmail(request.email())
+                .orElseThrow(() ->
+                        new InvalidCredentialsException("Invalid email or password"));
+
+        if (!passwordEncoder.matches(request.password(), user.getPassword())) {
+            throw new InvalidCredentialsException("Invalid email or password");
+        }
+
+        if (!user.isVerified()) {
+            throw new EmailNotVerifiedException("Please verify your email first");
+        }
+
+        String accessToken = jwtService.generateAccessToken(user);
+        String refreshToken = jwtService.generateRefreshToken(user);
+
+        return new AuthResponse(accessToken, refreshToken);
     }
 }

@@ -1,13 +1,16 @@
 
 package com.archit.authflow.controller;
 
+import com.archit.authflow.dto.request.LoginRequest;
 import com.archit.authflow.dto.request.RegisterRequest;
 import com.archit.authflow.dto.request.ResendOtpRequest;
 import com.archit.authflow.dto.request.VerifyOtpRequest;
+import com.archit.authflow.dto.response.AuthResponse;
 import com.archit.authflow.dto.response.MessageResponse;
 import com.archit.authflow.dto.response.RegisterResponse;
 import com.archit.authflow.service.AuthService;
 import jakarta.validation.Valid;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -37,5 +40,12 @@ public class AuthController {
             @Valid @RequestBody ResendOtpRequest request) {
 
         return authService.resendOtp(request);
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<AuthResponse> login(
+            @Valid @RequestBody LoginRequest request) {
+
+        return ResponseEntity.ok(authService.login(request));
     }
 }
