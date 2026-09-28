@@ -69,7 +69,6 @@ public class AuthService {
         otpEntity.setOtpHash(otpService.hashOtp(otp));
         otpEntity.setExpiry(otpService.getExpiryTime());
         otpEntity.setResendCount(0);
-        otpEntity.setUsed(false);
 
         otpRepository.save(otpEntity);
 
@@ -92,11 +91,11 @@ public class AuthService {
                 .orElseThrow(() ->
                         new RuntimeException("User not found"));
 
-        if (otpEntity.isUsed()) {
-            throw new RuntimeException("OTP already used");
-        }
 
         if (otpEntity.getExpiry().isBefore(LocalDateTime.now())) {
+
+            otpRepository.delete(otpEntity);
+
             throw new RuntimeException("OTP expired");
         }
 
@@ -104,8 +103,10 @@ public class AuthService {
             throw new InvalidOtpException("Invalid OTP");
         }
 
-        otpEntity.setUsed(true);
         user.setVerified(true);
+        userRepository.save(user);
+
+        otpRepository.delete(otpEntity);
 
         return new MessageResponse("Email verified successfully");
     }
@@ -135,9 +136,9 @@ public class AuthService {
                         "Maximum OTP resend attempts reached.");
             }
 
-            latestOtp.setUsed(true);
-
             resendCount = latestOtp.getResendCount() + 1;
+
+            otpRepository.delete(latestOtp);
         }
 
         String otp = otpService.generateOtp();
@@ -147,7 +148,6 @@ public class AuthService {
         newOtp.setEmail(user.getEmail());
         newOtp.setOtpHash(otpService.hashOtp(otp));
         newOtp.setExpiry(otpService.getExpiryTime());
-        newOtp.setUsed(false);
         newOtp.setResendCount(resendCount);
 
         otpRepository.save(newOtp);

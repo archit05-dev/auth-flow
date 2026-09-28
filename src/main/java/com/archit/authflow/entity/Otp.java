@@ -24,8 +24,6 @@ public class Otp {
     @Column(nullable = false)
     private int resendCount = 0;
 
-    @Column(nullable = false)
-    private boolean used = false;
 
     public Otp() {}
 
@@ -65,11 +63,4 @@ public class Otp {
         this.resendCount = resendCount;
     }
 
-    public boolean isUsed() {
-        return used;
-    }
-
-    public void setUsed(boolean used) {
-        this.used = used;
-    }
 }
