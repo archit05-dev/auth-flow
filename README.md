@@ -21,15 +21,15 @@
 
 ## Tech Stack
 
-| Category | Technology |
-|----------|------------|
-| Backend | Spring Boot 3 |
-| Security | Spring Security + JWT |
-| Database | PostgreSQL |
+| Category | Technology                  |
+|----------|-----------------------------|
+| Backend | Spring Boot 4               |
+| Security | Spring Security + JWT       |
+| Database | PostgreSQL                  |
 | ORM | Spring Data JPA (Hibernate) |
-| Email | Brevo SMTP |
-| Build Tool | Maven |
-| Java | Java 17 |
+| Email | Brevo SMTP                  |
+| Build Tool | Maven                       |
+| Java | Java 21                     |
 
 ---
 
