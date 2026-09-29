@@ -1,16 +1,16 @@
 
 package com.archit.authflow.controller;
 
-import com.archit.authflow.dto.request.LoginRequest;
-import com.archit.authflow.dto.request.RegisterRequest;
-import com.archit.authflow.dto.request.ResendOtpRequest;
-import com.archit.authflow.dto.request.VerifyOtpRequest;
+import com.archit.authflow.dto.request.*;
 import com.archit.authflow.dto.response.AuthResponse;
 import com.archit.authflow.dto.response.MessageResponse;
+import com.archit.authflow.dto.response.RefreshTokenResponse;
 import com.archit.authflow.dto.response.RegisterResponse;
+import com.archit.authflow.entity.User;
 import com.archit.authflow.service.AuthService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -47,5 +47,23 @@ public class AuthController {
             @Valid @RequestBody LoginRequest request) {
 
         return ResponseEntity.ok(authService.login(request));
+    }
+
+    @PostMapping("/refresh-token")
+    public ResponseEntity<RefreshTokenResponse> refreshToken(
+            @Valid @RequestBody RefreshTokenRequest request) {
+
+        return ResponseEntity.ok(authService.refreshToken(request));
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<MessageResponse> logout(
+            Authentication authentication) {
+
+        User user = (User) authentication.getPrincipal();
+
+        MessageResponse response = authService.logout(user);
+
+        return ResponseEntity.ok(response);
     }
 }

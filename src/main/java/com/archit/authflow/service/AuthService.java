@@ -1,17 +1,17 @@
 
 package com.archit.authflow.service;
 
-import com.archit.authflow.dto.request.LoginRequest;
-import com.archit.authflow.dto.request.RegisterRequest;
-import com.archit.authflow.dto.request.ResendOtpRequest;
-import com.archit.authflow.dto.request.VerifyOtpRequest;
+import com.archit.authflow.dto.request.*;
 import com.archit.authflow.dto.response.AuthResponse;
 import com.archit.authflow.dto.response.MessageResponse;
+import com.archit.authflow.dto.response.RefreshTokenResponse;
 import com.archit.authflow.dto.response.RegisterResponse;
 import com.archit.authflow.entity.Otp;
+import com.archit.authflow.entity.RefreshToken;
 import com.archit.authflow.entity.User;
 import com.archit.authflow.exception.*;
 import com.archit.authflow.repository.OtpRepository;
+import com.archit.authflow.repository.RefreshTokenRepository;
 import com.archit.authflow.repository.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -28,6 +28,7 @@ public class AuthService {
     private final OtpService otpService;
     private final EmailService emailService;
     private final JwtService jwtService;
+    private final RefreshTokenRepository refreshTokenRepository;
 
 
 
@@ -37,13 +38,15 @@ public class AuthService {
             PasswordEncoder passwordEncoder,
             OtpService otpService,
             EmailService emailService,
-            JwtService jwtService) {
+            JwtService jwtService,
+            RefreshTokenRepository refreshTokenRepository) {
         this.userRepository = userRepository;
         this.otpRepository = otpRepository;
         this.passwordEncoder = passwordEncoder;
         this.otpService = otpService;
         this.emailService = emailService;
         this.jwtService = jwtService;
+        this.refreshTokenRepository = refreshTokenRepository;
     }
 
 
@@ -86,19 +89,19 @@ public class AuthService {
         Otp otpEntity = otpRepository
                 .findTopByEmailOrderByIdDesc(request.email())
                 .orElseThrow(() ->
-                        new RuntimeException("OTP not found"));
+                        new InvalidOtpException("OTP not found"));
 
         User user = userRepository
                 .findByEmail(request.email())
                 .orElseThrow(() ->
-                        new RuntimeException("User not found"));
+                        new UserNotFoundException("User not found"));
 
 
         if (otpEntity.getExpiry().isBefore(LocalDateTime.now())) {
 
             otpRepository.delete(otpEntity);
 
-            throw new RuntimeException("OTP expired");
+            throw new InvalidOtpException("OTP expired");
         }
 
         if (!passwordEncoder.matches(request.otp(), otpEntity.getOtpHash())) {
@@ -118,7 +121,7 @@ public class AuthService {
 
         User user = userRepository.findByEmail(request.email())
                 .orElseThrow(() ->
-                        new RuntimeException("User not found"));
+                        new UserNotFoundException("User not found"));
 
         if (user.isVerified()) {
             throw new AlreadyVerifiedException(
@@ -159,6 +162,7 @@ public class AuthService {
         return new MessageResponse("OTP resent successfully.");
     }
 
+    @Transactional
     public AuthResponse login(LoginRequest request) {
 
         User user = userRepository.findByEmail(request.email())
@@ -176,6 +180,52 @@ public class AuthService {
         String accessToken = jwtService.generateAccessToken(user);
         String refreshToken = jwtService.generateRefreshToken(user);
 
+        refreshTokenRepository.findByUser(user)
+                .ifPresent(refreshTokenRepository::delete);
+        refreshTokenRepository.flush();
+
+        RefreshToken refreshTokenEntity = new RefreshToken();
+
+        refreshTokenEntity.setUser(user);
+        refreshTokenEntity.setToken(refreshToken);
+        refreshTokenEntity.setExpiry(LocalDateTime.now().plusDays(7));
+
+        refreshTokenRepository.save(refreshTokenEntity);
+
         return new AuthResponse(accessToken, refreshToken);
+    }
+
+    public RefreshTokenResponse refreshToken(RefreshTokenRequest request) {
+
+        RefreshToken storedToken = refreshTokenRepository
+                .findByToken(request.refreshToken())
+                .orElseThrow(() ->
+                        new InvalidCredentialsException("Invalid refresh token"));
+
+        if (storedToken.getExpiry().isBefore(LocalDateTime.now())) {
+
+            refreshTokenRepository.delete(storedToken);
+
+            throw new InvalidCredentialsException("Refresh token expired");
+        }
+
+        User user = storedToken.getUser();
+
+        if (!jwtService.isTokenValid(request.refreshToken(), user)) {
+            throw new InvalidCredentialsException("Invalid refresh token");
+        }
+
+        String newAccessToken = jwtService.generateAccessToken(user);
+
+        return new RefreshTokenResponse(newAccessToken);
+    }
+
+    @Transactional
+    public MessageResponse logout(User user) {
+
+        refreshTokenRepository.findByUser(user)
+                .ifPresent(refreshTokenRepository::delete);
+
+        return new MessageResponse("Logged out successfully");
     }
 }
