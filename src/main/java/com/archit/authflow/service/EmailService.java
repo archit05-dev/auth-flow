@@ -1,42 +1,59 @@
 package com.archit.authflow.service;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestClient;
+
+import java.util.List;
+import java.util.Map;
 
 @Service
 public class EmailService {
 
-    private final JavaMailSender mailSender;
+    private final RestClient restClient;
 
+    @Value("${brevo.api-key}")
+    private String apiKey;
 
     @Value("${mail.from}")
     private String fromEmail;
 
-    public EmailService(JavaMailSender mailSender) {
-        this.mailSender = mailSender;
+    public EmailService(RestClient restClient) {
+        this.restClient = restClient;
     }
 
     public void sendOtp(String to, String otp) {
 
-        SimpleMailMessage message = new SimpleMailMessage();
+        Map<String, Object> body = Map.of(
+                "sender", Map.of("email", fromEmail),
 
-        message.setFrom(fromEmail);
-        message.setTo(to);
-        message.setSubject("Your AuthFlow OTP");
-        message.setText("""
+                "to", List.of(
+                        Map.of("email", to)
+                ),
+
+                "subject", "Your AuthFlow OTP",
+                "textContent",
+                """
                 Hello %s,
-                
-                Your AuthFlow verification code is: %s
-                
-                This OTP will expire in 5 minutes.
-                
-                If you didn't request this, you can safely ignore this email.
-                
-                - AuthFlow
-                """.formatted(to, otp));
 
-        mailSender.send(message);
+                Your AuthFlow verification code is: %s
+
+                This OTP expires in 5 minutes.
+
+                If you didn't request this, ignore this email.
+
+                - AuthFlow
+                """.formatted(to, otp)
+        );
+
+
+        restClient.post()
+                .uri("https://api.brevo.com/v3/smtp/email")
+                .contentType(MediaType.APPLICATION_JSON)
+                .header("api-key", apiKey)
+                .body(body)
+                .retrieve()
+                .toBodilessEntity();
     }
 }
