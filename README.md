@@ -1,6 +1,22 @@
 # AuthFlow – JWT Authentication System with OTP Verification
 
-> A secure authentication system built with **Spring Boot**, **Spring Security**, **JWT (Access & Refresh Tokens)**, **PostgreSQL**, and **Brevo SMTP**. It implements email verification using OTP, secure password hashing with BCrypt, refresh token management, and protected authentication endpoints.
+> A secure authentication system built with **Spring Boot**, **Spring Security**, **JWT (Access & Refresh Tokens)**, **PostgreSQL**, and the **Brevo Email API**. It implements email verification using OTP, secure password hashing with BCrypt, refresh token management, protected authentication endpoints, and production deployment using Railway.
+
+## Live API
+
+**Base URL:**
+
+https://auth-flow-production-fb66.up.railway.app
+
+Health check:
+
+GET /
+
+Response:
+
+AuthFlow API is running!
+
+---
 
 ## Features
 
@@ -15,21 +31,26 @@
 - Global exception handling
 - Request validation using Jakarta Validation
 - PostgreSQL database integration
-- Email delivery using Brevo SMTP
+- Email delivery using the **Brevo REST API**
+- Deployed on **Railway**
+- Production PostgreSQL database using **Neon**
 
 ---
 
 ## Tech Stack
 
-| Category | Technology                  |
-|----------|-----------------------------|
-| Backend | Spring Boot 4               |
-| Security | Spring Security + JWT       |
-| Database | PostgreSQL                  |
+| Category | Technology |
+|----------|------------|
+| Backend | Spring Boot 4 |
+| Security | Spring Security + JWT |
+| Database | PostgreSQL |
 | ORM | Spring Data JPA (Hibernate) |
-| Email | Brevo SMTP                  |
-| Build Tool | Maven                       |
-| Java | Java 21                     |
+| Email | Brevo REST API |
+| API Client | Spring RestClient |
+| Deployment | Railway |
+| Database Hosting | Neon PostgreSQL |
+| Build Tool | Maven |
+| Java | Java 21 |
 
 ---
 
@@ -38,9 +59,11 @@
 ```text
 src/main/java/com/archit/authflow
 ├── config
-│   └── SecurityConfig
+│   ├── SecurityConfig
+│   └── RestClientConfig
 ├── controller
-│   └── AuthController
+│   ├── AuthController
+│   └── HealthController
 ├── dto
 │   ├── request
 │   └── response
@@ -73,7 +96,10 @@ Password Hashed (BCrypt)
 OTP Generated & Hashed
     │
     ▼
-OTP Sent via Brevo
+HTTPS Request to Brevo API
+    │
+    ▼
+OTP Email Sent
     │
     ▼
 Verify OTP
@@ -109,6 +135,7 @@ Refresh Token Deleted
 
 | Method | Endpoint | Purpose |
 |--------|----------|---------|
+| GET | `/` | Health check |
 | POST | `/api/auth/register` | Register user |
 | POST | `/api/auth/verify-otp` | Verify email OTP |
 | POST | `/api/auth/resend-otp` | Resend OTP |
@@ -134,6 +161,23 @@ POST /api/auth/register
 }
 ```
 
+---
+
+### Verify OTP
+
+```http
+POST /api/auth/verify-otp
+```
+
+```json
+{
+  "email": "archit@example.com",
+  "otp": "123456"
+}
+```
+
+---
+
 ### Login
 
 ```http
@@ -156,6 +200,8 @@ Response:
 }
 ```
 
+---
+
 ### Refresh Token
 
 ```http
@@ -170,6 +216,15 @@ POST /api/auth/refresh-token
 
 ---
 
+### Logout
+
+```http
+POST /api/auth/logout
+Authorization: Bearer <access-token>
+```
+
+---
+
 ## JWT Implementation
 
 ### Access Token
@@ -177,6 +232,8 @@ POST /api/auth/refresh-token
 - Validity: **15 minutes**
 - Used for authenticated requests.
 - Verified through a custom `JwtAuthenticationFilter`.
+- Not stored in the database.
+- Signed using **HS256**.
 
 ### Refresh Token
 
@@ -184,6 +241,7 @@ POST /api/auth/refresh-token
 - Stored in PostgreSQL.
 - Only one active refresh token exists per user.
 - Old refresh tokens are removed before saving a new one.
+- Deleted when the user logs out.
 
 ---
 
@@ -194,6 +252,36 @@ POST /api/auth/refresh-token
 - 5-minute expiry
 - Automatically deleted after successful verification or expiry
 - Maximum 3 resend attempts
+- Expired OTP records are cleaned up automatically
+
+---
+
+## Email Delivery
+
+AuthFlow uses the **Brevo REST API** for transactional email delivery.
+
+Instead of connecting directly to an SMTP server, the application sends an HTTPS POST request to Brevo's email API.
+
+```text
+AuthFlow
+    │
+    ▼
+EmailService
+    │
+    ▼
+Spring RestClient
+    │
+    ▼
+HTTPS POST
+    │
+    ▼
+Brevo Email API
+    │
+    ▼
+OTP Email
+```
+
+The Brevo API key is stored securely as an environment variable and is never hardcoded into the application.
 
 ---
 
@@ -202,9 +290,12 @@ POST /api/auth/refresh-token
 - BCrypt password hashing
 - JWT signature verification (HS256)
 - Stateless authentication
-- Refresh token revocation on logout
+- Refresh token storage and revocation
+- Refresh token invalidation on logout
 - Request validation using `@Valid`
 - Global exception handling with meaningful HTTP status codes
+- Secrets managed through environment variables
+- Protected authentication endpoints
 
 ---
 
@@ -214,31 +305,34 @@ Create the following environment variables before running the project:
 
 | Variable | Purpose |
 |----------|---------|
+| `SPRING_DATASOURCE_URL` | PostgreSQL JDBC connection URL |
 | `DB_USERNAME` | PostgreSQL username |
 | `DB_PASSWORD` | PostgreSQL password |
-| `MAIL_USERNAME` | Brevo SMTP login |
-| `MAIL_PASSWORD` | Brevo SMTP key |
+| `BREVO_API_KEY` | Brevo API authentication key |
+| `MAIL_FROM` | Verified sender email address |
 | `JWT_SECRET` | Secret used for signing JWTs |
+
+**Do not commit actual secret values to GitHub.**
 
 ---
 
 ## Running Locally
 
-Clone the repository.
+Clone the repository:
 
 ```bash
   git clone https://github.com/archit05-dev/auth-flow.git
 ```
 
-Move into the project.
+Move into the project:
 
 ```bash
   cd auth-flow
 ```
 
-Configure PostgreSQL and environment variables.
+Configure PostgreSQL and the required environment variables.
 
-Run the application.
+Run the application:
 
 ```bash
   mvn spring-boot:run
@@ -246,9 +340,23 @@ Run the application.
 
 The API will be available at:
 
-```text
 http://localhost:8080
-```
+
+---
+
+## Production Deployment
+
+AuthFlow is deployed using **Railway**.
+
+The production application uses:
+
+- **Railway** for application hosting
+- **Neon PostgreSQL** for the production database
+- **Brevo REST API** for transactional email delivery
+
+Production Base URL:
+
+https://auth-flow-production-fb66.up.railway.app
 
 ---
 
@@ -262,6 +370,8 @@ The project includes a Postman collection covering:
 - Login
 - Refresh Token
 - Logout
+
+The endpoints have been tested against the deployed production API.
 
 ---
 
