@@ -1,20 +1,26 @@
 # AuthFlow – JWT Authentication System with OTP Verification
 
-> A secure authentication system built with **Spring Boot**, **Spring Security**, **JWT (Access & Refresh Tokens)**, **PostgreSQL**, and the **Brevo Email API**. It implements email verification using OTP, secure password hashing with BCrypt, refresh token management, protected authentication endpoints, and production deployment using Railway.
+> A secure authentication system built with **Spring Boot**, **Spring Security**, **JWT (Access & Refresh Tokens)**, **PostgreSQL**, and the **Brevo Email API**. It implements email verification using OTP, secure password hashing with BCrypt, refresh token management, protected authentication endpoints, and production deployment using Render.
 
 ## Live API
 
 **Base URL:**
 
-https://auth-flow-production-fb66.up.railway.app
+[https://authflow-usby.onrender.com](https://authflow-usby.onrender.com)
 
-Health check:
+**Health Check:**
 
+```http
 GET /
+```
 
-Response:
+**Response:**
 
+```text
 AuthFlow API is running!
+```
+
+> **Note:** The Render free service may spin down after inactivity. The first request after a period of inactivity may take longer while the service starts.
 
 ---
 
@@ -32,7 +38,7 @@ AuthFlow API is running!
 - Request validation using Jakarta Validation
 - PostgreSQL database integration
 - Email delivery using the **Brevo REST API**
-- Deployed on **Railway**
+- Application deployed on **Render**
 - Production PostgreSQL database using **Neon**
 
 ---
@@ -43,11 +49,12 @@ AuthFlow API is running!
 |----------|------------|
 | Backend | Spring Boot 4 |
 | Security | Spring Security + JWT |
+| Password Hashing | BCrypt |
 | Database | PostgreSQL |
 | ORM | Spring Data JPA (Hibernate) |
 | Email | Brevo REST API |
 | API Client | Spring RestClient |
-| Deployment | Railway |
+| Deployment | Render |
 | Database Hosting | Neon PostgreSQL |
 | Build Tool | Maven |
 | Java | Java 21 |
@@ -88,45 +95,46 @@ src/main/java/com/archit/authflow
 
 ```text
 Register
-    │
-    ▼
+    |
+    v
 Password Hashed (BCrypt)
-    │
-    ▼
+    |
+    v
 OTP Generated & Hashed
-    │
-    ▼
+    |
+    v
 HTTPS Request to Brevo API
-    │
-    ▼
+    |
+    v
 OTP Email Sent
-    │
-    ▼
+    |
+    v
 Verify OTP
-    │
-    ▼
+    |
+    v
 User Verified
-    │
-    ▼
+    |
+    v
 Login
-    │
+    |
     ├── Access Token (15 min)
+    |
     └── Refresh Token (7 days)
-            │
-            ▼
-Stored in PostgreSQL
-            │
-            ▼
-Refresh Token Endpoint
-            │
-            ▼
-New Access Token
-            │
-            ▼
-Logout
-            │
-            ▼
-Refresh Token Deleted
+              |
+              v
+       Stored in PostgreSQL
+              |
+              v
+       Refresh Token Endpoint
+              |
+              v
+       New Access Token
+              |
+              v
+            Logout
+              |
+              v
+       Refresh Token Deleted
 ```
 
 ---
@@ -191,7 +199,7 @@ POST /api/auth/login
 }
 ```
 
-Response:
+**Example Response:**
 
 ```json
 {
@@ -222,6 +230,8 @@ POST /api/auth/refresh-token
 POST /api/auth/logout
 Authorization: Bearer <access-token>
 ```
+
+The logout endpoint requires authentication. A valid access token must be provided in the Authorization header.
 
 ---
 
@@ -264,20 +274,20 @@ Instead of connecting directly to an SMTP server, the application sends an HTTPS
 
 ```text
 AuthFlow
-    │
-    ▼
+    |
+    v
 EmailService
-    │
-    ▼
+    |
+    v
 Spring RestClient
-    │
-    ▼
+    |
+    v
 HTTPS POST
-    │
-    ▼
+    |
+    v
 Brevo Email API
-    │
-    ▼
+    |
+    v
 OTP Email
 ```
 
@@ -318,21 +328,23 @@ Create the following environment variables before running the project:
 
 ## Running Locally
 
-Clone the repository:
+### 1. Clone the repository
 
 ```bash
   git clone https://github.com/archit05-dev/auth-flow.git
 ```
 
-Move into the project:
+### 2. Move into the project directory
 
 ```bash
   cd auth-flow
 ```
 
-Configure PostgreSQL and the required environment variables.
+### 3. Configure environment variables
 
-Run the application:
+Configure PostgreSQL and set all the required environment variables listed above.
+
+### 4. Run the application
 
 ```bash
   mvn spring-boot:run
@@ -340,23 +352,23 @@ Run the application:
 
 The API will be available at:
 
-http://localhost:8080
+[http://localhost:8080](http://localhost:8080)
 
 ---
 
 ## Production Deployment
 
-AuthFlow is deployed using **Railway**.
+AuthFlow is deployed using **Render**.
 
 The production application uses:
 
-- **Railway** for application hosting
+- **Render** for application hosting
 - **Neon PostgreSQL** for the production database
 - **Brevo REST API** for transactional email delivery
 
-Production Base URL:
+**Production Base URL:**
 
-https://auth-flow-production-fb66.up.railway.app
+[https://authflow-usby.onrender.com](https://authflow-usby.onrender.com)
 
 ---
 
@@ -389,5 +401,5 @@ The endpoints have been tested against the deployed production API.
 
 **Archit Singhal**
 
-- GitHub: https://github.com/archit05-dev
-- LinkedIn: https://www.linkedin.com/in/archit-singhal-4a5049389/
+- GitHub: [https://github.com/archit05-dev](https://github.com/archit05-dev)
+- LinkedIn: [https://www.linkedin.com/in/archit-singhal-4a5049389/](https://www.linkedin.com/in/archit-singhal-4a5049389/)

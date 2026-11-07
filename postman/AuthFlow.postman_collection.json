@@ -25,13 +25,12 @@
           }
         },
         "url": {
-          "raw": "https://auth-flow-production-fb66.up.railway.app/api/auth/register",
+          "raw": "https://authflow-usby.onrender.com/api/auth/register",
           "protocol": "https",
           "host": [
-            "auth-flow-production-fb66",
-            "up",
-            "railway",
-            "app"
+            "authflow-usby",
+            "onrender",
+            "com"
           ],
           "path": [
             "api",
@@ -52,7 +51,7 @@
         "header": [],
         "body": {
           "mode": "raw",
-          "raw": "{\r\n  \"email\":\"sharmaharsh0817@gmail.com\",\r\n  \"otp\":\"812711\"\r\n}",
+          "raw": "{\r\n  \"email\":\"deepag909@gmail.com\",\r\n  \"otp\":\"465484\"\r\n}",
           "options": {
             "raw": {
               "language": "json"
@@ -60,13 +59,12 @@
           }
         },
         "url": {
-          "raw": "https://auth-flow-production-fb66.up.railway.app/api/auth/verify-otp",
+          "raw": "https://authflow-usby.onrender.com/api/auth/verify-otp",
           "protocol": "https",
           "host": [
-            "auth-flow-production-fb66",
-            "up",
-            "railway",
-            "app"
+            "authflow-usby",
+            "onrender",
+            "com"
           ],
           "path": [
             "api",
@@ -87,7 +85,7 @@
         "header": [],
         "body": {
           "mode": "raw",
-          "raw": "{\r\n    \"email\":\"sharmaharsh0817@gmail.com\"\r\n}",
+          "raw": "{\r\n    \"email\":\"deepag909@gmail.com\"\r\n}",
           "options": {
             "raw": {
               "language": "json"
@@ -95,13 +93,12 @@
           }
         },
         "url": {
-          "raw": "https://auth-flow-production-fb66.up.railway.app/api/auth/resend-otp",
+          "raw": "https://authflow-usby.onrender.com/api/auth/resend-otp",
           "protocol": "https",
           "host": [
-            "auth-flow-production-fb66",
-            "up",
-            "railway",
-            "app"
+            "authflow-usby",
+            "onrender",
+            "com"
           ],
           "path": [
             "api",
@@ -122,7 +119,7 @@
         "header": [],
         "body": {
           "mode": "raw",
-          "raw": "{\r\n  \"email\": \"sharmaharsh0817@gmail.com\",\r\n  \"password\": \"password123\"\r\n}",
+          "raw": "{\r\n  \"email\": \"deepag909@gmail.com\",\r\n  \"password\": \"password123\"\r\n}",
           "options": {
             "raw": {
               "language": "json"
@@ -130,13 +127,12 @@
           }
         },
         "url": {
-          "raw": "https://auth-flow-production-fb66.up.railway.app/api/auth/login",
+          "raw": "https://authflow-usby.onrender.com/api/auth/login",
           "protocol": "https",
           "host": [
-            "auth-flow-production-fb66",
-            "up",
-            "railway",
-            "app"
+            "authflow-usby",
+            "onrender",
+            "com"
           ],
           "path": [
             "api",
@@ -154,7 +150,7 @@
         "header": [],
         "body": {
           "mode": "raw",
-          "raw": "{\r\n    \"refreshToken\": \"{{json_web_token_0y5v}}\"\r\n}",
+          "raw": "{\r\n    \"refreshToken\": \"{{json_web_token_1af5}}\"\r\n}",
           "options": {
             "raw": {
               "language": "json"
@@ -162,13 +158,12 @@
           }
         },
         "url": {
-          "raw": "https://auth-flow-production-fb66.up.railway.app/api/auth/refresh-token",
+          "raw": "https://authflow-usby.onrender.com/api/auth/refresh-token",
           "protocol": "https",
           "host": [
-            "auth-flow-production-fb66",
-            "up",
-            "railway",
-            "app"
+            "authflow-usby",
+            "onrender",
+            "com"
           ],
           "path": [
             "api",
@@ -187,7 +182,7 @@
           "bearer": [
             {
               "key": "token",
-              "value": "{{auth_secret_073p}}",
+              "value": "{{json_web_token_0ic8}}",
               "type": "string"
             }
           ]
@@ -195,13 +190,12 @@
         "method": "POST",
         "header": [],
         "url": {
-          "raw": "https://auth-flow-production-fb66.up.railway.app/api/auth/logout",
+          "raw": "https://authflow-usby.onrender.com/api/auth/logout",
           "protocol": "https",
           "host": [
-            "auth-flow-production-fb66",
-            "up",
-            "railway",
-            "app"
+            "authflow-usby",
+            "onrender",
+            "com"
           ],
           "path": [
             "api",
@@ -253,6 +247,14 @@
     },
     {
       "key": "auth_secret_073p",
+      "secret": true
+    },
+    {
+      "key": "json_web_token_1af5",
+      "secret": true
+    },
+    {
+      "key": "json_web_token_0ic8",
       "secret": true
     }
   ]

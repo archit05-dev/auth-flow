@@ -51,7 +51,7 @@ public class AuthService {
 
 
 
-
+    @Transactional
     public RegisterResponse register(RegisterRequest request) {
 
         if(userRepository.existsByEmail(request.email())){
